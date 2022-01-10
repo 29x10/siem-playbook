@@ -1,0 +1,54 @@
+---
+- name: uninstall zookeeper
+  hosts: zookeeper
+  collections:
+    - siem.zookeeper
+  tasks:
+    - ansible.builtin.import_role:
+        name: zookeeper-binary-uninstall
+  tags:
+    - uninstall
+
+- name: prepare certificate from vault
+  hosts: zookeeper
+  connection: local
+  collections:
+    - siem.vault
+  tasks:
+    - ansible.builtin.import_role:
+        name: vault-cert-prep
+      vars:
+        ssl_common_name: "{{ inventory_hostname }}"
+        ssl_password: "{{ keystore_pass }}"
+  tags:
+    - vault_cert
+
+- name: install zookeeper
+  hosts: zookeeper
+  collections:
+    - siem.zookeeper
+  tasks:
+    - ansible.builtin.import_role:
+        name: zookeeper-binary-install
+  tags:
+    - install
+
+- name: update config
+  hosts: zookeeper
+  collections:
+    - siem.zookeeper
+  tasks:
+    - ansible.builtin.import_role:
+        name: zookeeper-config-update
+  tags:
+    - update_config
+
+- name: install certificate
+  hosts: zookeeper
+  collections:
+    - siem.zookeeper
+  tasks:
+    - ansible.builtin.import_role:
+        name: zookeeper-certificate-install
+  tags:
+    - install_cert

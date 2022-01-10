@@ -1,0 +1,64 @@
+---
+- name: create temp folder
+  ansible.builtin.tempfile:
+    state: directory
+    prefix: siem_zookeeper_
+  register: cert_temp
+
+- name: copy root ca and issue ca
+  ansible.builtin.copy:
+    src: "{{ zookeeper.cert_path }}/{{ item.src }}"
+    dest: "{{ cert_temp.path }}/{{ item.dest }}"
+    mode: 0400
+  loop:
+    - src: root.pem
+      dest: root.pem
+    - src: issuing_ca.pem
+      dest: issuing_ca.pem
+    - src: "{{ inventory_hostname }}/key.pem"
+      dest: key.pem
+    - src: "{{ inventory_hostname }}/cert.pem"
+      dest: cert.pem
+
+- name: create security folder
+  ansible.builtin.file:
+    path: "{{ zookeeper.base }}/{{ zookeeper.version }}/security"
+    state: directory
+    mode: 0700
+
+- name: create PKCS#5 v1.5 private key
+  ansible.builtin.command:
+    cmd: >
+      openssl pkcs8 
+      -in key.pem
+      -topk8
+      -v1 PBE-SHA1-RC4-128
+      -passin "pass:{{ keystore_pass }}"
+      -passout "pass:{{ keystore_pass }}"
+      -out key_v1.pem
+    chdir: "{{ cert_temp.path }}"
+  no_log: yes
+
+- name: create key store
+  ansible.builtin.shell:
+    cmd: cat key_v1.pem cert.pem issuing_ca.pem > keystore.pem
+    chdir: "{{ cert_temp.path }}"
+
+- name: copy keystore and truststore
+  ansible.builtin.copy:
+    src: "{{ cert_temp.path }}/{{ item.src }}"
+    dest: "{{ zookeeper.base }}/{{ zookeeper.version }}/security/{{ item.dest }}"
+    remote_src: yes
+    mode: 0400
+  loop:
+    - src: root.pem
+      dest: truststore.pem
+    - src: keystore.pem
+      dest: keystore.pem
+  loop_control:
+    label: "{{ item.dest }}"
+
+- name: remove cert temp folder
+  ansible.builtin.file:
+    path: "{{ cert_temp.path }}"
+    state: absent

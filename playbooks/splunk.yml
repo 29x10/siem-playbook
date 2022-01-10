@@ -1,0 +1,50 @@
+---
+- name: uninstall splunk
+  hosts: splunk
+  collections:
+    - siem.splunk
+  tasks:
+    - import_role:
+        name: splunk-binary-uninstall
+  tags:
+    - uninstall
+
+- name: install splunk
+  hosts: splunk
+  collections:
+    - siem.splunk
+  tasks:
+    - import_role:
+        name: splunk-binary-install
+  tags:
+    - install
+
+- name: setup splunk common config
+  hosts: splunk
+  collections:
+    - siem.splunk
+  tasks:
+    - import_role:
+        name: splunk-common-setup
+  tags:
+    - common_setup
+
+- name: install certificate
+  hosts: splunk
+  collections:
+    - siem.splunk
+  tasks:
+    - import_role:
+        name: splunk-cert-install
+  tags:
+    - install_cert
+
+- name: install license
+  hosts: license_master
+  collections:
+    - siem.splunk
+  tasks:
+    - import_role:
+        name: splunk-license-install
+  tags:
+    - install_license

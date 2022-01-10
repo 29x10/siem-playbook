@@ -1,0 +1,4 @@
+{
+    "common_name": "{{ ssl_common_name }}",
+    "private_key_format": "pkcs8"
+}

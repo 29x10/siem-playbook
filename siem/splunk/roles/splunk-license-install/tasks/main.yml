@@ -1,0 +1,12 @@
+---
+- name: ensure splunk license directory exists
+  ansible.builtin.file:
+    path: "{{ splunk.home }}/etc/licenses/enterprise"
+    state: directory
+
+- name: install splunk license
+  ansible.builtin.copy:
+    src: "{{ splunk.license }}"
+    dest: "{{ splunk.home }}/etc/licenses/enterprise/Splunk.License.lic"
+
+

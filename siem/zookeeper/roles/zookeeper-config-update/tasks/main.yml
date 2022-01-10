@@ -1,0 +1,7 @@
+---
+- name: update zookeeper config
+  ansible.builtin.template:
+    src: zoo.cfg
+    dest: '{{ zookeeper.base }}/{{ zookeeper.version }}/conf/zoo.cfg'
+    mode: 0600
+  no_log: yes

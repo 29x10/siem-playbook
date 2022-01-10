@@ -1,0 +1,14 @@
+splunk:
+  home: /home/ec2-user/splunk
+  binary: /home/jeromex/splunk-8.2.4-87e2dda940d1-Linux-x86_64.tgz
+  ssl:
+    password: please_tell_me
+    email_address: cod-siem@ms.com
+  pass4SymmKey: common_secret
+  self_ca_path: /home/jeromex/signcert
+  admin_hashed_pwd: $6$LxwCgUx4yLjRxtDa$Mm35yX/60AgM0G4tMRmzrrwijX3.qvBPf7j.OgNZ.wHirgQr6tpZ8JcgFhR3cMsQGuOU4vAKUxYyU86ASkLpK1
+  license: /home/jeromex/license/splunk.license
+  idxc:
+    pass4SymmKey: indexer cluster secret
+  shc:
+    pass4SymmKey: search head cluster secret

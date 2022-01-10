@@ -1,0 +1,56 @@
+---
+- name: clean up previous run
+  ansible.builtin.file:
+    state: absent
+    path: "{{ vault.cert_path }}/{{ ssl_common_name }}"
+
+- name: create certificate host folder
+  ansible.builtin.file:
+    state: directory
+    path: "{{ vault.cert_path }}/{{ ssl_common_name }}"
+    mode: 0700
+
+- name: issue certificate
+  ansible.builtin.uri:
+    url: "{{ vault.addr }}/v1/pki_int/issue/{{ vault.pki_role }}"
+    method: POST
+    body: "{{ lookup('template', 'issue_certificate.json') }}"
+    body_format: json
+    headers:
+      X-Vault-Token: "{{ vault.token }}"
+  register: certificate_response
+  no_log: yes
+
+- name: save certificate to files
+  ansible.builtin.copy:
+    content: "{{ item.content }}\n"
+    dest: "{{ vault.cert_path }}/{{ item.path }}"
+    mode: 0400
+  loop:
+    - path: "{{ ssl_common_name }}/unencrypted_key.pem"
+      content:  "{{ certificate_response['json']['data']['private_key'] }}"
+    - path: "{{ ssl_common_name }}/cert.pem"
+      content: "{{ certificate_response['json']['data']['certificate'] }}"
+    - path: issuing_ca.pem
+      content: "{{ certificate_response['json']['data']['issuing_ca'] }}"
+    - path: root.pem
+      content: "{{ certificate_response['json']['data']['ca_chain'][1] }}"
+  loop_control:
+    label: "{{ item.path }}"
+  no_log: yes
+
+- name: encrypt private key
+  ansible.builtin.command:
+    cmd: "openssl pkcs8 -in unencrypted_key.pem -topk8 -passout pass:{{ ssl_password }} -out key.pem"
+    chdir: "{{ vault.cert_path }}/{{ ssl_common_name }}"
+  no_log: yes
+
+- name: update private key permission
+  ansible.builtin.file:
+    path: "{{ vault.cert_path }}/{{ ssl_common_name }}/key.pem"
+    mode: 0400
+
+- name: delete unencrypted key
+  ansible.builtin.file:
+    path: "{{ vault.cert_path }}/{{ ssl_common_name }}/unencrypted_key.pem"
+    state: absent

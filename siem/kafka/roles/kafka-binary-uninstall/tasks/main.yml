@@ -1,0 +1,11 @@
+---
+- name: uninstall kafka
+  ansible.builtin.file:
+    path: "{{ kafka.base }}/{{ kafka.version }}"
+    state: absent
+
+- name: remove kafka data
+  ansible.builtin.file:
+    path: "{{ kafka.data_dir }}"
+    state: absent
+  when: delete_data is defined and delete_data == "yes"

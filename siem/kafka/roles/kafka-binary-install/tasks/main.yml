@@ -1,0 +1,26 @@
+---
+- name: ensure base install location exists
+  ansible.builtin.file:
+    path: "{{ kafka.base }}/{{ kafka.version }}"
+    state: directory
+    mode: 0700
+
+- name: install binary
+  ansible.builtin.unarchive:
+    src: "{{ kafka.binary }}"
+    dest: "{{ kafka.base }}/{{ kafka.version }}"
+    extra_opts:
+      - --strip-components=1
+
+- name: update zookeeper binary permission
+  ansible.builtin.file:
+    path: "{{ kafka.base }}/{{ kafka.version }}"
+    mode: g-rwx,o-rwx
+    state: directory
+    recurse: yes
+
+- name: ensure data directory exists
+  ansible.builtin.file:
+    path: "{{ kafka.data_dir }}"
+    state: directory
+    mode: 0700

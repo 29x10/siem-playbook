@@ -1,0 +1,11 @@
+---
+- name: install config
+  ansible.builtin.template:
+    src: "{{ item }}"
+    dest: "{{ splunk.home }}/etc/system/local/{{ item }}"
+    mode: 0600
+  loop:
+    - server.conf
+    - user-seed.conf
+    - web.conf
+  no_log: yes

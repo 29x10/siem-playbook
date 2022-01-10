@@ -1,0 +1,22 @@
+[project]
+name = "siem-playbook"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Jerome Xue", email = "kongpo0412@gmail.com"},
+]
+dependencies = [
+    "ansible-core>=2.12.2",
+]
+requires-python = ">=3.8"
+license = {text = "MIT"}
+
+[project.urls]
+homepage = ""
+
+[tool]
+[tool.pdm]
+
+[build-system]
+requires = ["pdm-pep517"]
+build-backend = "pdm.pep517.api"

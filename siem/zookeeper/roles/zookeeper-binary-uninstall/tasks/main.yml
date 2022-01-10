@@ -1,0 +1,11 @@
+---
+- name: uninstall zookeeper
+  ansible.builtin.file:
+    path: "{{ zookeeper.base }}/{{ zookeeper.version }}"
+    state: absent
+
+- name: remove zookeeper data
+  ansible.builtin.file:
+    path: "{{ zookeeper.data_dir }}"
+    state: absent
+  when: delete_data is defined and delete_data == "yes"

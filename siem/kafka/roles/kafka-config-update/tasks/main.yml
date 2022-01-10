@@ -1,0 +1,17 @@
+---
+- name: update kafka config
+  ansible.builtin.template:
+    src: "{{ item }}"
+    dest: "{{ kafka.base }}/{{ kafka.version }}/{{ item }}"
+    mode: 0600
+  loop:
+    - config/client.properties
+    - config/server.properties
+
+- name: update kafka script
+  ansible.builtin.template:
+    src: "{{ item }}"
+    dest: "{{ kafka.base }}/{{ kafka.version }}/{{ item }}"
+    mode: 0700
+  loop:
+    - bin/kafka-topics.sh

@@ -1,0 +1,69 @@
+---
+- name: uninstall kafka
+  hosts: kafka
+  collections:
+    - siem.kafka
+  tasks:
+    - ansible.builtin.import_role:
+        name: kafka-binary-uninstall
+  tags:
+    - uninstall
+
+- name: prepare certificate from vault
+  hosts: kafka
+  connection: local
+  collections:
+    - siem.vault
+  tasks:
+    - ansible.builtin.import_role:
+        name: vault-cert-prep
+      vars:
+        ssl_common_name: "{{ inventory_hostname }}"
+        ssl_password: "{{ keystore_pass }}"
+  tags:
+    - vault_cert
+
+- name: prepare zookeeper client certificate from vault
+  hosts: kafka[0]
+  connection: local
+  collections:
+    - siem.vault
+  tasks:
+    - ansible.builtin.import_role:
+        name: vault-cert-prep
+      vars:
+        ssl_common_name: "{{ kafka.zookeeper.common_name }}"
+        ssl_password: "{{ kafka.zookeeper.keystore_pass }}"
+  tags:
+    - vault_cert
+
+- name: install kafka
+  hosts: kafka
+  collections:
+    - siem.kafka
+  tasks:
+    - ansible.builtin.import_role:
+        name: kafka-binary-install
+  tags:
+    - install
+
+- name: install certificate
+  gather_facts: yes
+  hosts: kafka
+  collections:
+    - siem.kafka
+  tasks:
+    - ansible.builtin.import_role:
+        name: kafka-certificate-install
+  tags:
+    - install_certificate
+
+- name: update config
+  hosts: kafka
+  collections:
+    - siem.kafka
+  tasks:
+    - ansible.builtin.import_role:
+        name: kafka-config-update
+  tags:
+    - update_config

@@ -1,0 +1,8 @@
+---
+- name: install certificate
+  hosts: all
+  collections:
+    - siem.vault
+  tasks:
+    - import_role:
+        name: vault-cert-prep

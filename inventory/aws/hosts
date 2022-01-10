@@ -1,0 +1,31 @@
+[splunk:children]
+license_master
+indexer
+search_head
+deployer
+cluster_master
+
+[license_master]
+ip-10-1-79-235.ec2.internal ansible_user=ec2-user splunk_site=site1
+
+[indexer:children]
+indexer_sh
+indexer_bj
+
+[indexer_sh]
+ip-10-1-79-198.ec2.internal ansible_user=ec2-user splunk_site=site1
+ip-10-1-79-60.ec2.internal ansible_user=ec2-user splunk_site=site1
+
+[indexer_bj]
+ip-10-1-79-62.ec2.internal ansible_user=ec2-user splunk_site=site2
+
+[search_head]
+ip-10-1-79-211.ec2.internal ansible_user=ec2-user splunk_site=site0
+ip-10-1-79-223.ec2.internal ansible_user=ec2-user splunk_site=site0
+ip-10-1-79-204.ec2.internal ansible_user=ec2-user splunk_site=site0
+
+[deployer]
+ip-10-1-79-57.ec2.internal ansible_user=ec2-user
+
+[cluster_master]
+ip-10-1-79-34.ec2.internal ansible_user=ec2-user splunk_site=site1
