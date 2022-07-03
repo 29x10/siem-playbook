@@ -1,11 +1,11 @@
 ---
 - name: ensure splunk stopped
   ansible.builtin.command:
-    cmd: '{{ splunk.home }}/bin/splunk status --accept-license --no-prompt'
+    cmd: "{{ splunk.home }}/bin/splunk status --accept-license --no-prompt"
   register: splunk_status
   failed_when: "'splunkd is running' in splunk_status.stdout"
 
 - name: remove all
   ansible.builtin.file:
-    path: '{{ splunk.home }}'
+    path: "{{ splunk.home }}"
     state: absent

@@ -2,7 +2,7 @@
 - name: create temp folder
   ansible.builtin.tempfile:
     state: directory
-    prefix: siem_zookeeper_
+    suffix: .siem.zookeeper
   register: cert_temp
 
 - name: copy root ca and issue ca

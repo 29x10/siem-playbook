@@ -1,10 +1,23 @@
 ---
+- name: prepare certificate from vault
+  hosts: splunk
+  connection: local
+  collections:
+    - siem.vault
+  tasks:
+    - ansible.builtin.import_role:
+        name: vault-cert-prep
+      vars:
+        ssl_common_name: "{{ inventory_hostname }}"
+  tags:
+    - vault_cert
+
 - name: uninstall splunk
   hosts: splunk
   collections:
     - siem.splunk
   tasks:
-    - import_role:
+    - ansible.builtin.import_role:
         name: splunk-binary-uninstall
   tags:
     - uninstall
@@ -14,7 +27,7 @@
   collections:
     - siem.splunk
   tasks:
-    - import_role:
+    - ansible.builtin.import_role:
         name: splunk-binary-install
   tags:
     - install
@@ -24,7 +37,7 @@
   collections:
     - siem.splunk
   tasks:
-    - import_role:
+    - ansible.builtin.import_role:
         name: splunk-common-setup
   tags:
     - common_setup
@@ -34,17 +47,17 @@
   collections:
     - siem.splunk
   tasks:
-    - import_role:
+    - ansible.builtin.import_role:
         name: splunk-cert-install
   tags:
     - install_cert
 
-- name: install license
-  hosts: license_master
-  collections:
-    - siem.splunk
-  tasks:
-    - import_role:
-        name: splunk-license-install
-  tags:
-    - install_license
+# - name: install license
+#   hosts: license_master
+#   collections:
+#     - siem.splunk
+#   tasks:
+#     - ansible.builtin.import_role:
+#         name: splunk-license-install
+#   tags:
+#     - install_license

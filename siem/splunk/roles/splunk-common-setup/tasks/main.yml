@@ -8,4 +8,4 @@
     - server.conf
     - user-seed.conf
     - web.conf
-  no_log: yes
+  # no_log: yes

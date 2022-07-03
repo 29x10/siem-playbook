@@ -2,67 +2,66 @@
 - name: create temp folder
   ansible.builtin.tempfile:
     state: directory
-    prefix: siem_splunk
+    suffix: .siem.splunk
   register: cert_temp
 
-- include_tasks: self_sign.yml
-  when: "'self_ca_path' in splunk"
-
-- include_tasks: pki.yml
-  when: "'ms_cert_path' in splunk"
-
-- name: read root ca
-  ansible.builtin.slurp:
-    src: "{{ cert_temp.path }}/rootCA.pem"
-  register: rootCA
-
-- name: read app ca
-  ansible.builtin.slurp:
-    src: "{{ splunk.home }}/etc/auth/appsCA.pem"
-  register: appsca
+- name: copy root ca and issue ca
+  ansible.builtin.copy:
+    src: "{{ splunk.cert_path }}/{{ item.src }}"
+    dest: "{{ cert_temp.path }}/{{ item.dest }}"
+    mode: 0400
+  loop:
+    - src: root.pem
+      dest: root.pem
+    - src: issuing_ca.pem
+      dest: issuing_ca.pem
+    - src: "{{ inventory_hostname }}/key.pem"
+      dest: key.pem
+    - src: "{{ inventory_hostname }}/cert.pem"
+      dest: cert.pem
+  loop_control:
+    label: "{{ item.src }}"
 
 - name: install ca certificate
-  ansible.builtin.copy:
-    content: "{{ appsca['content'] | b64decode }}{{ rootCA['content'] | b64decode }}\n"
-    dest: "{{ splunk.home }}/etc/auth/cacert.pem"
-    mode: 0600
+  ansible.builtin.shell:
+    cmd: cat "{{ splunk.home }}/etc/auth/appsCA.pem" root.pem > ca_bundle.pem
+    chdir: "{{ cert_temp.path }}"
 
 - name: generated encrypted web private key
   ansible.builtin.command:
-    cmd: "openssl pkcs8 -in key.pem -topk8 -passin pass:{{ splunk.ssl.password }} -nocrypt -out unencrypted_key.pem"
+    cmd: "openssl pkcs8 -in key.pem -topk8 -passin pass:{{ ssl_password }} -nocrypt -out unencrypted_key.pem"
+    chdir: "{{ cert_temp.path }}"
+  no_log: yes
+
+- name: install splunkd certificate
+  ansible.builtin.shell:
+    cmd: cat cert.pem key.pem issuing_ca.pem > splunkd_server.pem
     chdir: "{{ cert_temp.path }}"
 
-- name: read server certificate
-  ansible.builtin.slurp:
-    src: "{{ cert_temp.path }}/{{ inventory_hostname }}.crt"
-  register: server_cert
+- name: install splunkd certificate
+  ansible.builtin.shell:
+    cmd: cat cert.pem issuing_ca.pem > web.pem
+    chdir: "{{ cert_temp.path }}"
 
-- name: read server key
-  ansible.builtin.slurp:
-    src: "{{ cert_temp.path }}/key.pem"
-  register: server_key
-
-- name: install server certificate
+- name: copy keystore and truststore
   ansible.builtin.copy:
-    content: "{{ server_cert['content'] | b64decode }}{{ server_key['content'] | b64decode }}{{ rootCA['content'] | b64decode }}\n"
-    dest: "{{ splunk.home }}/etc/auth/server.pem"
-    mode: 0600
-
-- name: install web certificate
-  ansible.builtin.copy:
+    src: "{{ cert_temp.path }}/{{ item.src }}"
+    dest: "{{ splunk.home }}/etc/auth/{{ item.dest }}"
     remote_src: yes
-    src: "{{ cert_temp.path }}/{{ inventory_hostname }}.crt"
-    dest: "{{ splunk.home }}/etc/auth/splunkweb/cert.pem"
-    mode: 0600
+    mode: 0400
+  loop:
+    - src: splunkd_server.pem
+      dest: server.pem
+    - src: ca_bundle.pem
+      dest: cacert.pem
+    - src: web.pem
+      dest: splunkweb/cert.pem
+    - src: unencrypted_key.pem
+      dest: splunkweb/privkey.pem
+  loop_control:
+    label: "{{ item.dest }}"
 
-- name: install private key
-  ansible.builtin.copy:
-    remote_src: yes
-    src: "{{ cert_temp.path }}/unencrypted_key.pem"
-    dest: "{{ splunk.home }}/etc/auth/splunkweb/privkey.pem"
-    mode: 0600
-
-- name: cleanup temp folder
+- name: remove cert temp folder
   ansible.builtin.file:
-    path: '{{ cert_temp.path }}'
+    path: "{{ cert_temp.path }}"
     state: absent
