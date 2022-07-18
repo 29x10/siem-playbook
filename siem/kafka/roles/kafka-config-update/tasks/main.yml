@@ -7,6 +7,7 @@
   loop:
     - config/client.properties
     - config/server.properties
+    - config/kraft/server.properties
 
 - name: update kafka script
   ansible.builtin.template:
